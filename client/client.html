@@ -6,7 +6,86 @@
   
   <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.34/browser.min.js"></script>
   <script type="text/babel">
-
+	const handleResponse = (xhr) => {
+		const h1 = document.createElement('h1');
+		const p = document.createElement('p');
+		
+		try {
+			const obj = JSON.parse(xhr.response);
+		
+			if(obj.message) p.textContent = `Message: ${obj.message}`;
+			if(obj.users) p.textContent = JSON.stringify(obj);
+		} catch(e) {}
+		
+		switch(xhr.status) {
+			case 200:
+				h1.textContent = 'Success';
+				break;
+			case 201:
+				h1.textContent = 'Create';
+				break;
+			case 204:
+				h1.textContent = 'Updated (No Content)';
+				break;
+			case 400:
+				h1.textContent = 'Bad Request';
+				break;
+			case 404:
+				h1.textContent = 'Resource Not Found';
+				break;
+			default:
+				h1.textContent = 'Invalid Status Code';
+				p.textContent = 'Status code not implemented by client.';
+				break;
+		};
+		
+		content.appendChild(h1);
+		content.appendChild(p);
+	};
+	
+	const sendPost = (e, url) => {
+		e.preventDefault();
+		
+		const xhr = new XMLHttpRequest();
+		xhr.open('POST', url);
+		xhr.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
+		xhr.setRequestHeader('Accept', 'application/json');
+		xhr.onload = () => handleResponse(xhr);
+		
+		const formData = `name=${nameField.value}&age=${ageField.value}`;
+		xhr.send(formData);
+		
+		return false;
+	};
+	
+	const sendAjax = (e, url, method) => {
+		e.preventDefault();
+		
+		const xhr = new XMLHttpRequest();
+		xhr.open(method, url);
+		xhr.setRequestHeader('Accept', 'application/json');
+		xhr.onload = () => handleResponse(xhr);
+		xhr.send();
+		
+		return false;
+	};
+	
+	const init = () => {
+		const sendPostHandler = (e) => {
+			content.innerHTML = '';
+			sendPost(e, '/addUser');
+		};
+		
+		const sendAjaxHandler = (e) => {
+			content.innerHTML = '';
+			sendAjax(e, urlField.value, methodSelect.value);
+		};
+		
+		nameForm.onsubmit = sendPostHandler;
+		userForm.onsubmit = sendAjaxHandler;
+	};
+	
+	window.onload = init;
   </script>
 </head>
 <body>
@@ -28,7 +107,7 @@
         <option value="get">GET</option>
         <option value="head">HEAD</option>
       </select>
-      <input type="submit" value="Get User" />
+      <input type="submit" value="Send" />
     </form>
   </section>
   <section id="content">
